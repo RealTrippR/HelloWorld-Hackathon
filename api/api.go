@@ -189,13 +189,13 @@ func RoutePOST_GetSubmissions(w http.ResponseWriter, r *http.Request) {
 	model.Mutex.Lock()
 	defer model.Mutex.Unlock()
 
-	sourceFiles, ok := model.Submissions[uId]
+	submissions, ok := model.Submissions[uId]
 	if !ok {
-		sourceFiles = []model.SourceFile{} // return empty slice if none
+		submissions = model.Submission{} // return empty slice if none
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(sourceFiles)
+	json.NewEncoder(w).Encode(submissions)
 }
 
 func RoutePOST_JoinUser(w http.ResponseWriter, r *http.Request) {
@@ -272,9 +272,8 @@ func RouteGET_GetState(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if model.GetCycleState() == model.Coding {
 		w.Write([]byte("{\"State\":\"coding\"}"))
-		return
 	} else {
 		w.Write([]byte("{\"State\":\"reviewing\"}"))
-		return
 	}
+	return
 }

@@ -67,6 +67,8 @@ type CycleState struct {
 	Cycle             CycleTime
 	codingDurMins     float64 // time of the coding cycle, in minutes
 	reviewDurMins     float64 // time of the review cycle in minutes
+	activeUserCount   uint32
+	submittedCount    uint32
 }
 
 var Users map[int64]User // LOOKUP BY PRIVATE ID
@@ -234,5 +236,5 @@ func AddUser(name string) (error, int64) {
 }
 
 func createLeaderboard() (error, int64) {
-
+	return nil, 0
 }

@@ -42,7 +42,20 @@
 
 
 /api/submit
-
+    Example usage:
+    {
+        "UserId": 0,
+        "SourceFiles": [
+            {
+                "Name":"smemga.c",
+                "Code":"//Your code here"
+            },
+            {
+                "Name":"fib.c",
+                "Code":"//Insert fibbonaci algorithm here"
+            }
+        ]
+    }
 
 /api/get_state
     TYPE: GET
