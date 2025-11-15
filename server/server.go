@@ -125,6 +125,11 @@ func json_to_problem(value interface{}, itr uint32) (*Problem, error) {
 		return nil, fmt.Errorf("invalid problem: missing or invalid 'Header'")
 	}
 
+	expectedOutput, ok := problemJSON["ExpectedOutput"].(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("invalid problem: missing or invalid 'ExpectedOutput'")
+	}
+
 	diffStr, ok := problemJSON["Difficulty"].(string)
 	if !ok || diffStr == "" {
 		return nil, fmt.Errorf("invalid problem: missing or invalid 'Difficulty'")
@@ -180,12 +185,26 @@ func parse_problem_file(path string) error {
 		var problem *Problem
 		problem, err = json_to_problem(value, itr)
 
-		problemList = append(problemList, *problem)
-
 		if err != nil {
 			return err
 		}
+		problemList = append(problemList, *problem)
+
+		problem_to_json(problem)
+
 		itr++
 	}
 	return nil
+}
+
+func problem_to_json(problem *Problem) string {
+	jsonBytes, err := json.Marshal(*problem)
+	if err != nil {
+		fmt.Println("Error marshaling JSON:", err)
+		return ""
+	}
+
+	jsonString := string(jsonBytes)
+	fmt.Println(jsonString)
+	return string(jsonBytes)
 }
