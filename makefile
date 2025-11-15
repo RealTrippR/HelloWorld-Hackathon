@@ -1,4 +1,4 @@
-build/server.exe: main.go server/server.go
+build/server.exe: main.go server/server.go api/api.go
 	go build -o build/server.exe
 
 run: build/server.exe

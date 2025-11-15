@@ -102,10 +102,6 @@ func Terminate() {
 	serverMutex.Unlock()
 }
 
-func forwardRequest(client *clientInfo, port uint16) {
-
-}
-
 func handleConnection(client *clientInfo) {
 	defer client.conn.Close()
 	r := bufio.NewReader(client.conn)
@@ -234,5 +230,6 @@ func problem_to_json(problem *Problem) string {
 
 	jsonString := string(jsonBytes)
 	fmt.Println(jsonString)
+
 	return string(jsonBytes)
 }
