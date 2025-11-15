@@ -105,6 +105,11 @@ func Tick() {
 	}
 }
 
+func GetCycleTimeLeftSeconds() float64 {
+	elapsed := time.Since(cycleState.LastCycleTime)
+	return elapsed.Seconds()
+}
+
 func GetCycleState() CycleTime {
 	return cycleState.Cycle
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"server/model"
+	"strconv"
 	"strings"
 )
 
@@ -351,7 +352,7 @@ func RoutePOST_AddCodeReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Decode request body (for auth)
+	// Decode request body
 	var received map[string]interface{}
 	if err := json.NewDecoder(r.Body).Decode(&received); err != nil {
 		http.Error(w, "Invalid JSON payload", http.StatusBadRequest)
@@ -413,4 +414,19 @@ func RoutePOST_AddCodeReview(w http.ResponseWriter, r *http.Request) {
 
 	sub.CodeReviews = append(sub.CodeReviews, review)
 	model.Submissions[targetUserId] = sub
+}
+
+func RoutePOST_GetCycleTimeLeft(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed: Expected GET", http.StatusMethodNotAllowed)
+		return
+	}
+
+	secAsStr := strconv.FormatInt(int64(model.GetCycleTimeLeftSeconds()), 10)
+	var str string
+	str = str + "{\"SecondsRemaining\":" + secAsStr + "}"
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(str))
 }
