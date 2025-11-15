@@ -74,3 +74,9 @@ NOTE: Any endpoint name followed by an asterisk (*) means that it must be given 
 /api/get_state
     TYPE: GET
     returns either {"State":"coding"} or {"State":"reviewing"}
+
+/api/get_time_left
+    TYPE: GET
+    returns the number of seconds left in the current cycle.
+    return format:
+    {"SecondsRemaining": integer}
