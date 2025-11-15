@@ -14,26 +14,6 @@ import (
 	"sync"
 )
 
-type ProblemDifficulty int
-
-const (
-	Easy = iota
-	Medium
-	Hard
-)
-
-type ProblemHeader struct {
-	name        string
-	description string
-}
-
-type Problem struct {
-	header     ProblemHeader
-	difficulty ProblemDifficulty
-	id         uint16
-	objective  string
-}
-
 type clientInfo struct {
 	useTLS bool
 	conn   net.Conn
@@ -158,12 +138,7 @@ func json_to_problem(value interface{}, itr uint32) (*Problem, error) {
 	} else if diffStr == "Hard" {
 		diff = Hard
 	} else {
-		return nil, fmt.Errorf("invalid problem: missing or invalid 'Difficulty': Valid options are: \"Easy\", \"Medium\", \"Hard\"")
-	}
-
-	objective, ok := problemJSON["Objective"].(string)
-	if !ok || diffStr == "" {
-		return nil, fmt.Errorf("invalid problem: missing or invalid 'Objective'")
+		//return fmt.Errorf("invalid problem: missing or invalid 'Difficulty': ", diffStr, ". Valid options are: \"Easy\", \"Medium\", \"Hard\""), nil
 	}
 
 	problem := &Problem{
@@ -173,7 +148,6 @@ func json_to_problem(value interface{}, itr uint32) (*Problem, error) {
 		},
 		difficulty: diff,
 		id:         uint16(itr),
-		objective:  objective,
 	}
 
 	return problem, nil
