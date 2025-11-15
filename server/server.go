@@ -34,6 +34,9 @@ func Init(port uint16) error {
 	mux.HandleFunc("/api/join", api.RoutePOST_JoinUser)
 	mux.HandleFunc("/api/get_users", api.RoutePOST_GetUsers)
 	mux.HandleFunc("/api/get_submissions", api.RoutePOST_GetSubmissions)
+	mux.HandleFunc("/api/speed_leaderboard", api.RouteGET_SpeedLeaderboard)
+	mux.HandleFunc("/api/quality_leaderboard", api.RoutePOST_GetSubmissions)
+	mux.HandleFunc("/api/get_state", api.RouteGET_GetState)
 
 	server = &http.Server{
 		Addr:    ":" + strconv.Itoa(int(port)),

@@ -44,6 +44,16 @@ type User struct {
 	privateId int64
 }
 
+type CodeReview struct {
+	stars      uint8
+	msg        string
+	reviewerId int64
+}
+type Submission struct {
+	Source      []SourceFile
+	CodeReviews []CodeReview
+}
+
 type CycleTime int
 
 const (
@@ -54,14 +64,14 @@ const (
 type CycleState struct {
 	LastCycleTime     time.Time
 	currentProblemIdx uint32
-	cycle             CycleTime
+	Cycle             CycleTime
 	codingDurMins     float64 // time of the coding cycle, in minutes
 	reviewDurMins     float64 // time of the review cycle in minutes
 }
 
 var Users map[int64]User // LOOKUP BY PRIVATE ID
 
-var Submissions map[int64][]SourceFile // LOOKUP BY PRIVATE ID
+var Submissions map[int64]Submission // LOOKUP BY PRIVATE ID
 
 var ProblemList []Problem
 
@@ -71,7 +81,7 @@ var Mutex sync.Mutex
 
 func Init() {
 	Users = make(map[int64]User)
-	Submissions = make(map[int64][]SourceFile)
+	Submissions = make(map[int64]Submission)
 	cycleState.currentProblemIdx = 0
 	cycleState.LastCycleTime = time.Now()
 	cycleState.codingDurMins = 30.0
@@ -83,18 +93,22 @@ func Tick() {
 	elapsed := time.Since(cycleState.LastCycleTime)
 	minutes := elapsed.Minutes()
 
-	if cycleState.cycle == Coding && minutes > cycleState.codingDurMins {
+	if cycleState.Cycle == Coding && minutes > cycleState.codingDurMins {
 		cycleState.LastCycleTime = time.Now()
-		cycleState.cycle = Review
-	} else if cycleState.cycle == Review && minutes > cycleState.reviewDurMins {
+		cycleState.Cycle = Review
+	} else if cycleState.Cycle == Review && minutes > cycleState.reviewDurMins {
 		// PROCEED TO NEXT PROBLEM
-		cycleState.cycle = Coding
+		cycleState.Cycle = Coding
 		CycleProblem()
 	}
 }
 
+func GetCycleState() CycleTime {
+	return cycleState.Cycle
+}
+
 func CycleProblem() {
-	Submissions = make(map[int64][]SourceFile)
+	Submissions = make(map[int64]Submission)
 	cycleState.LastCycleTime = time.Now()
 	cycleState.currentProblemIdx++
 	if cycleState.currentProblemIdx >= uint32(len(ProblemList)) {
@@ -148,7 +162,51 @@ func IsValidUserId(userId int64) bool {
 }
 
 func AddSubmission(uId int64, sourceFiles []SourceFile) {
-	Submissions[uId] = sourceFiles
+	sub := Submissions[uId]
+	sub.Source = sourceFiles
+	Submissions[uId] = sub
+}
+
+func AddCodeReview(codeOwnerName string, reviewerId int64, stars uint8, msg string) bool {
+
+	var owner_id int64
+	var found bool = false
+	for id, user := range Users {
+		if user.Name == codeOwnerName {
+			found = true
+			owner_id = id
+			break
+		}
+	}
+	if !found {
+		return false
+	}
+
+	target_sub, ok := Submissions[owner_id]
+	if !ok {
+		return false
+	}
+
+	_, ok = Users[reviewerId]
+	if !ok {
+		return false
+	}
+
+	var review CodeReview
+	review.msg = msg
+	review.stars = stars
+	review.reviewerId = reviewerId
+	if stars > 5 {
+		stars = 5
+	}
+	if stars < 1 {
+		stars = 1
+	}
+
+	target_sub.CodeReviews = append(target_sub.CodeReviews)
+
+	Submissions[owner_id] = target_sub
+	return true
 }
 
 func AddUser(name string) (error, int64) {
@@ -173,4 +231,8 @@ func AddUser(name string) (error, int64) {
 
 	Users[u.privateId] = u
 	return nil, u.privateId
+}
+
+func createLeaderboard() (error, int64) {
+
 }

@@ -169,7 +169,7 @@ func RoutePOST_GetUsers(w http.ResponseWriter, r *http.Request) {
 // RoutePOST_GetSubmissions returns the submissions for a given UserID
 func RoutePOST_GetSubmissions(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		http.Error(w, "Method not allowed: Expected GET", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -244,4 +244,37 @@ func RoutePOST_JoinUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
-func RouteGET_SpeedLeaders
+func RouteGET_SpeedLeaderboard(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed: Expected GET", http.StatusMethodNotAllowed)
+		return
+	}
+
+}
+
+func RouteGET_QualityLeaderboard(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed: Expected GET", http.StatusMethodNotAllowed)
+		return
+	}
+
+}
+
+func RouteGET_GetState(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed: Expected GET", http.StatusMethodNotAllowed)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if model.GetCycleState() == model.Coding {
+		w.Write([]byte("{\"State\":\"coding\"}"))
+		return
+	} else {
+		w.Write([]byte("{\"State\":\"reviewing\"}"))
+		return
+	}
+}

@@ -42,3 +42,8 @@
 
 
 /api/submit
+
+
+/api/get_state
+    TYPE: GET
+    returns either {"State":"coding"} or {"State":"reviewing"}
