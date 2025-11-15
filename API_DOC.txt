@@ -1,4 +1,4 @@
-/api/current_problem - RouteGET_CurrentProblem:
+/api/challenge - RouteGET_CurrentProblem:
     TYPE: GET
     Returns the current problem in JSON format
 
@@ -11,6 +11,7 @@
     returns: {"correct": boolean (true/false)}`
 
 
-/api/checkin_user - RoutePOST_CheckinUser:
+/api/join - RoutePOST_CheckinUser:
     TYPE: POST
     
+/api/submit

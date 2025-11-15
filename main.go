@@ -22,7 +22,7 @@ func main() {
 		return
 	}
 
-	fmt.Println("Server open on port ", port, ".\nPress any key to quit the server.")
+	fmt.Println("Server open on port", port, ".\nPress any key to quit the server.")
 	reader := bufio.NewReader(os.Stdin)
 	_, _ = reader.ReadString('\n')
 	server.Terminate()

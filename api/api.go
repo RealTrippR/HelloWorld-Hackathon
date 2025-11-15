@@ -4,11 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"reflect"
 	"server/model"
 )
 
-func RouteGET_CurrentProblem(w http.ResponseWriter, r *http.Request) {
+func RouteGET_CurrentChallenge(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed: Expected GET", http.StatusMethodNotAllowed)
 		return
@@ -53,21 +52,14 @@ func RoutePOST_CheckSolution(w http.ResponseWriter, r *http.Request) {
 
 	expected := model.GetCurrentProblem().TestCases[int(caseIdx)].OutputJSON
 
-	// Marshal the map into a JSON byte slice
-	jsonBytes, err := json.Marshal(expected)
-	fmt.Println("EXPECTED: ", jsonBytes)
+	jsonBytesExpected, err := json.Marshal(expected)
+	fmt.Println("EXPECTED: ", string(jsonBytesExpected))
 
-	jsonBytes, err = json.Marshal(received["Output"])
-	fmt.Println("RECEIVED: ", jsonBytes)
-
-	output, ok := received["Output"].(string)
-	if !ok {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
+	jsonBytesRecevied, err := json.Marshal(received["Output"])
+	fmt.Println("RECEIVED: ", string(jsonBytesRecevied))
 
 	// Check equality
-	if reflect.DeepEqual(output, expected) {
+	if string(jsonBytesRecevied) == string(jsonBytesExpected) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"correct": true}`))
 	} else {
@@ -76,6 +68,19 @@ func RoutePOST_CheckSolution(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func RoutePOST_checkinUser(w http.ResponseWriter, r *http.Request) {
+func RoutePOST_joinUser(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed: Expected POST", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Decode the JSON body into a map
+	var received map[string]interface{}
+	err := json.NewDecoder(r.Body).Decode(&received)
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
 }

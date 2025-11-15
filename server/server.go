@@ -28,10 +28,10 @@ func Init(port uint16) error {
 	defer serverMutex.Unlock()
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/api/current_problem", api.RouteGET_CurrentProblem)
+	mux.HandleFunc("/api/challenge", api.RouteGET_CurrentChallenge)
 	mux.HandleFunc("/api/check_solution", api.RoutePOST_CheckSolution)
+	mux.HandleFunc("/api/join", api.RoutePOST_joinUser)
 
-	st := ":" + strconv.Itoa(int(port))
 	server = &http.Server{
 		Addr:    ":" + strconv.Itoa(int(port)),
 		Handler: mux,
@@ -42,8 +42,6 @@ func Init(port uint16) error {
 			//fmt.Println("HTTP server error:", err)
 		}
 	}()
-
-	go http.ListenAndServe(st, nil)
 
 	return nil
 }
