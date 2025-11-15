@@ -166,36 +166,103 @@ func RoutePOST_GetUsers(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(users)
 }
 
-// RoutePOST_GetSubmissions returns the submissions for a given UserID
+type publicCodeReview struct {
+	reviewerName string
+	stars        uint8
+	msg          string
+}
+
+type publicSubmission struct {
+	source  []model.SourceFile
+	reviews []publicCodeReview
+}
+
+// RoutePOST_GetSubmissions returns all submissions, keyed by username
 func RoutePOST_GetSubmissions(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed: Expected GET", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// Decode request body
+	// Decode request body (for auth)
 	var received map[string]interface{}
 	if err := json.NewDecoder(r.Body).Decode(&received); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		http.Error(w, "Invalid JSON payload", http.StatusBadRequest)
 		return
 	}
 
-	auth, uId := model.IsAuthedRequest(received)
+	auth, _ := model.IsAuthedRequest(received)
 	if !auth {
-		w.WriteHeader(http.StatusUnauthorized)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
 	model.Mutex.Lock()
 	defer model.Mutex.Unlock()
 
-	submissions, ok := model.Submissions[uId]
-	if !ok {
-		submissions = model.Submission{} // return empty slice if none
+	// Build public map keyed by username
+	var submissionsPublic []publicSubmission
+	for userId, privSubmission := range model.Submissions {
+		user, ok := model.Users[userId]
+		if !ok {
+			continue // skip unknown user IDs
+		}
+
+		var submission publicSubmission
+		for _, review := range privSubmission.CodeReviews {
+			var publicReviews publicCodeReview
+			publicReviews.msg = review.Msg
+			publicReviews.reviewerName = model.Users[review.ReviewerId].Name
+			publicReviews.stars = review.Stars
+			submission.reviews = append(submission.reviews, publicReviews)
+		}
+		submission.source = privSubmission.Source
+
+		submissionsPublic = append(submissionsPublic, submission)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(submissions)
+	json.NewEncoder(w).Encode(submissionsPublic)
+}
+
+func RouteGET_GetCodeReviews(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed: Expected GET", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Decode request body (for auth)
+	var received map[string]interface{}
+	if err := json.NewDecoder(r.Body).Decode(&received); err != nil {
+		http.Error(w, "Invalid JSON payload", http.StatusBadRequest)
+		return
+	}
+
+	auth, user_id := model.IsAuthedRequest(received)
+	if !auth {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	model.Mutex.Lock()
+	defer model.Mutex.Unlock()
+
+	sub := model.Submissions[user_id]
+
+	var codeReviewsForUser []publicCodeReview
+
+	for _, privReview := range sub.CodeReviews {
+
+		var review publicCodeReview
+		review.msg = privReview.Msg
+		review.reviewerName = model.Users[privReview.ReviewerId].Name
+		review.stars = privReview.Stars
+		codeReviewsForUser = append(codeReviewsForUser, review)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(codeReviewsForUser)
 }
 
 func RoutePOST_JoinUser(w http.ResponseWriter, r *http.Request) {
@@ -275,5 +342,65 @@ func RouteGET_GetState(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.Write([]byte("{\"State\":\"reviewing\"}"))
 	}
-	return
+}
+
+func RoutePOST_AddCodeReview(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed: Expected GET", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Decode request body (for auth)
+	var received map[string]interface{}
+	if err := json.NewDecoder(r.Body).Decode(&received); err != nil {
+		http.Error(w, "Invalid JSON payload", http.StatusBadRequest)
+		return
+	}
+
+	auth, _ := model.IsAuthedRequest(received)
+	if !auth {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	targetUser, ok := received["TargetUser"].(string)
+	if !ok {
+		http.Error(w, "Missing or invalid field 'TargetUser'", http.StatusBadRequest)
+		return
+	}
+	reviewContents, ok := received["Review"].(string)
+	if !ok {
+		http.Error(w, "Missing or invalid field 'Review'", http.StatusBadRequest)
+		return
+	}
+	stars, ok := received["Stars"].(float64)
+	if !ok {
+		http.Error(w, "Missing or invalid field 'Stars'", http.StatusBadRequest)
+		return
+	}
+	var review model.CodeReview
+	review.Msg = reviewContents
+	review.Stars = uint8(stars)
+
+	var targetUserId int64
+	var found bool = false
+	for _, user := range model.Users {
+		if user.Name == targetUser {
+			targetUserId = user.Id
+			found = true
+		}
+	}
+	if !found {
+		http.Error(w, "Invalid field 'TargetUser'", http.StatusBadRequest)
+		return
+	}
+
+	sub, ok := model.Submissions[targetUserId]
+	if !ok {
+		http.Error(w, "Missing or invalid field 'TargetUser'", http.StatusBadRequest)
+		return
+	}
+
+	sub.CodeReviews = append(sub.CodeReviews, review)
+	model.Submissions[targetUserId] = sub
 }

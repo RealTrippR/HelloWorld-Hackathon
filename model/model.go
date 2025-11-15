@@ -40,14 +40,14 @@ type TestCase struct {
 }
 
 type User struct {
-	Name      string
-	privateId int64
+	Name string
+	Id   int64
 }
 
 type CodeReview struct {
-	stars      uint8
-	msg        string
-	reviewerId int64
+	Stars      uint8
+	Msg        string
+	ReviewerId int64
 }
 type Submission struct {
 	Source      []SourceFile
@@ -142,7 +142,7 @@ func generateSecureRandomInt64() (int64, error) {
 }
 
 func IsAuthedRequest(received map[string]interface{}) (bool, int64) {
-	return true, 0 // DEBUG ONLY
+	//return true, 0 // DEBUG ONLY
 
 	// Extract UserID
 	raw, ok := received["UserID"]
@@ -195,9 +195,9 @@ func AddCodeReview(codeOwnerName string, reviewerId int64, stars uint8, msg stri
 	}
 
 	var review CodeReview
-	review.msg = msg
-	review.stars = stars
-	review.reviewerId = reviewerId
+	review.Msg = msg
+	review.Stars = stars
+	review.ReviewerId = reviewerId
 	if stars > 5 {
 		stars = 5
 	}
@@ -215,24 +215,24 @@ func AddUser(name string) (error, int64) {
 	var u User
 	var err error
 	u.Name = name
-	u.privateId, err = generateSecureRandomInt64()
+	u.Id, err = generateSecureRandomInt64()
 	if err != nil {
 		return err, 0
 	}
-	_, ok := Users[u.privateId]
+	_, ok := Users[u.Id]
 	if ok {
 		// key exists
 		for !ok {
-			u.privateId, err = generateSecureRandomInt64()
+			u.Id, err = generateSecureRandomInt64()
 			if err != nil {
 				return err, 0
 			}
-			_, ok = Users[u.privateId]
+			_, ok = Users[u.Id]
 		}
 	}
 
-	Users[u.privateId] = u
-	return nil, u.privateId
+	Users[u.Id] = u
+	return nil, u.Id
 }
 
 func createLeaderboard() (error, int64) {

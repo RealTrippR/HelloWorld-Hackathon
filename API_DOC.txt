@@ -1,9 +1,13 @@
+NOTE: Any endpoint name followed by an asterisk (*) means that it must be given a
+ parameter of "UserId": number in the root JSON structure as part of the request body.
+
+
 /api/challenge - RouteGET_CurrentProblem:
     TYPE: GET
     Returns the current problem in JSON format
 
 
-/api/check_solution - RoutePOST_CheckSolution:
+/api/check_solution * - RoutePOST_CheckSolution:
     TYPE: POST
     Parameters:
     "TestCase": integer // the index of the test case to check against
@@ -11,7 +15,7 @@
     returns: {"correct": boolean (true/false)}`
 
 
-/api/join:
+/api/join: *
     TYPE: POST
 
     Takes the username as an argument in JSON format:
@@ -37,8 +41,18 @@
         }
     ]
 
-/api/get_submissions:
-    
+/api/get_submissions: *
+    TYPE: GET
+
+     Parameters:
+
+/api/add_code_review: *
+    TYPE: POST
+    Parameters:
+
+    "TargetUser":<string>
+    "Review":<string>
+    "Stars":<string>
 
 
 /api/submit
