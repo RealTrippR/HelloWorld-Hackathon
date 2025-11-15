@@ -41,13 +41,13 @@ type TestCase struct {
 
 type User struct {
 	Name string
-	Id   int64
+	Id   int32
 }
 
 type CodeReview struct {
 	Stars      uint8
 	Msg        string
-	ReviewerId int64
+	ReviewerId int32
 }
 type Submission struct {
 	Source      []SourceFile
@@ -71,9 +71,9 @@ type CycleState struct {
 	submittedCount    uint32
 }
 
-var Users map[int64]User // LOOKUP BY PRIVATE ID
+var Users map[int32]User // LOOKUP BY PRIVATE ID
 
-var Submissions map[int64]Submission // LOOKUP BY PRIVATE ID
+var Submissions map[int32]Submission // LOOKUP BY PRIVATE ID
 
 var ProblemList []Problem
 
@@ -82,8 +82,8 @@ var cycleState CycleState
 var Mutex sync.Mutex
 
 func Init() {
-	Users = make(map[int64]User)
-	Submissions = make(map[int64]Submission)
+	Users = make(map[int32]User)
+	Submissions = make(map[int32]Submission)
 	cycleState.currentProblemIdx = 0
 	cycleState.LastCycleTime = time.Now()
 	cycleState.codingDurMins = 30.0
@@ -110,7 +110,7 @@ func GetCycleState() CycleTime {
 }
 
 func CycleProblem() {
-	Submissions = make(map[int64]Submission)
+	Submissions = make(map[int32]Submission)
 	cycleState.LastCycleTime = time.Now()
 	cycleState.currentProblemIdx++
 	if cycleState.currentProblemIdx >= uint32(len(ProblemList)) {
@@ -131,25 +131,25 @@ func IsUsernameTaken(name string) bool {
 	return false
 }
 
-func generateSecureRandomInt64() (int64, error) {
-	var b [8]byte
+func generateSecureRandomInt32() (int32, error) {
+	var b [4]byte
 	_, err := rand.Read(b[:])
 	if err != nil {
 		return 0, fmt.Errorf("failed to read from crypto/rand: %w", err)
 	}
 
-	return int64(binary.LittleEndian.Uint64(b[:])), nil
+	return int32(binary.LittleEndian.Uint32(b[:])), nil
 }
 
-func IsAuthedRequest(received map[string]interface{}) (bool, int64) {
+func IsAuthedRequest(received map[string]interface{}) (bool, int32) {
 	//return true, 0 // DEBUG ONLY
 
 	// Extract UserID
-	raw, ok := received["UserID"]
+	raw, ok := received["UserId"]
 	if !ok {
 		return false, 0
 	}
-	uId := int64(raw.(float64))
+	uId := int32(raw.(float64))
 
 	if IsValidUserId(uId) {
 		return true, uId
@@ -158,20 +158,20 @@ func IsAuthedRequest(received map[string]interface{}) (bool, int64) {
 	}
 }
 
-func IsValidUserId(userId int64) bool {
+func IsValidUserId(userId int32) bool {
 	_, ok := Users[userId]
 	return ok
 }
 
-func AddSubmission(uId int64, sourceFiles []SourceFile) {
+func AddSubmission(uId int32, sourceFiles []SourceFile) {
 	sub := Submissions[uId]
 	sub.Source = sourceFiles
 	Submissions[uId] = sub
 }
 
-func AddCodeReview(codeOwnerName string, reviewerId int64, stars uint8, msg string) bool {
+func AddCodeReview(codeOwnerName string, reviewerId int32, stars uint8, msg string) bool {
 
-	var owner_id int64
+	var owner_id int32
 	var found bool = false
 	for id, user := range Users {
 		if user.Name == codeOwnerName {
@@ -205,17 +205,17 @@ func AddCodeReview(codeOwnerName string, reviewerId int64, stars uint8, msg stri
 		stars = 1
 	}
 
-	target_sub.CodeReviews = append(target_sub.CodeReviews)
+	target_sub.CodeReviews = append(target_sub.CodeReviews, review)
 
 	Submissions[owner_id] = target_sub
 	return true
 }
 
-func AddUser(name string) (error, int64) {
+func AddUser(name string) (error, int32) {
 	var u User
 	var err error
 	u.Name = name
-	u.Id, err = generateSecureRandomInt64()
+	u.Id, err = generateSecureRandomInt32()
 	if err != nil {
 		return err, 0
 	}
@@ -223,7 +223,7 @@ func AddUser(name string) (error, int64) {
 	if ok {
 		// key exists
 		for !ok {
-			u.Id, err = generateSecureRandomInt64()
+			u.Id, err = generateSecureRandomInt32()
 			if err != nil {
 				return err, 0
 			}
@@ -235,6 +235,6 @@ func AddUser(name string) (error, int64) {
 	return nil, u.Id
 }
 
-func createLeaderboard() (error, int64) {
+func createLeaderboard() (error, int32) {
 	return nil, 0
 }

@@ -167,15 +167,15 @@ func RoutePOST_GetUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 type publicCodeReview struct {
-	reviewerName string
-	stars        uint8
-	msg          string
+	ReviewerName string
+	Stars        uint8
+	Msg          string
 }
 
 type publicSubmission struct {
-	source  []model.SourceFile
-	reviews []publicCodeReview
-	author  string
+	Source  []model.SourceFile
+	Reviews []publicCodeReview
+	Author  string
 }
 
 // RoutePOST_GetSubmissions returns all submissions, keyed by username
@@ -212,13 +212,13 @@ func RoutePOST_GetSubmissions(w http.ResponseWriter, r *http.Request) {
 		var submission publicSubmission
 		for _, review := range privSubmission.CodeReviews {
 			var publicReviews publicCodeReview
-			publicReviews.msg = review.Msg
-			publicReviews.reviewerName = model.Users[review.ReviewerId].Name
-			publicReviews.stars = review.Stars
-			submission.reviews = append(submission.reviews, publicReviews)
+			publicReviews.Msg = review.Msg
+			publicReviews.ReviewerName = model.Users[review.ReviewerId].Name
+			publicReviews.Stars = review.Stars
+			submission.Reviews = append(submission.Reviews, publicReviews)
 		}
-		submission.source = privSubmission.Source
-		submission.author = user.Name
+		submission.Source = privSubmission.Source
+		submission.Author = user.Name
 		submissionsPublic = append(submissionsPublic, submission)
 	}
 
@@ -256,9 +256,9 @@ func RouteGET_GetCodeReviews(w http.ResponseWriter, r *http.Request) {
 	for _, privReview := range sub.CodeReviews {
 
 		var review publicCodeReview
-		review.msg = privReview.Msg
-		review.reviewerName = model.Users[privReview.ReviewerId].Name
-		review.stars = privReview.Stars
+		review.Msg = privReview.Msg
+		review.ReviewerName = model.Users[privReview.ReviewerId].Name
+		review.Stars = privReview.Stars
 		codeReviewsForUser = append(codeReviewsForUser, review)
 	}
 
@@ -295,7 +295,7 @@ func RoutePOST_JoinUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var id int64
+	var id int32
 
 	err, id = model.AddUser(username)
 
@@ -306,7 +306,7 @@ func RoutePOST_JoinUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	resp := map[string]interface{}{
 		"Error":  "success",
-		"UserID": id, // uint64, stays a number
+		"UserId": id, // uint64, stays a number
 	}
 
 	json.NewEncoder(w).Encode(resp)
@@ -383,7 +383,7 @@ func RoutePOST_AddCodeReview(w http.ResponseWriter, r *http.Request) {
 	review.Msg = reviewContents
 	review.Stars = uint8(stars)
 
-	var targetUserId int64
+	var targetUserId int32
 	var found bool = false
 	for _, user := range model.Users {
 		if user.Name == targetUser {
