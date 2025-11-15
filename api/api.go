@@ -358,7 +358,7 @@ func RoutePOST_AddCodeReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	auth, _ := model.IsAuthedRequest(received)
+	auth, userId := model.IsAuthedRequest(received)
 	if !auth {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
@@ -400,6 +400,14 @@ func RoutePOST_AddCodeReview(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		http.Error(w, "Missing or invalid field 'TargetUser'", http.StatusBadRequest)
 		return
+	}
+
+	// check if the target user has already been reviewed
+	for _, review := range sub.CodeReviews {
+		if review.ReviewerId == userId {
+			http.Error(w, "Missing or invalid field 'TargetUser'", http.StatusBadRequest)
+			break
+		}
 	}
 
 	sub.CodeReviews = append(sub.CodeReviews, review)
