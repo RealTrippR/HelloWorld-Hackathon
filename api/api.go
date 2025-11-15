@@ -175,6 +175,7 @@ type publicCodeReview struct {
 type publicSubmission struct {
 	source  []model.SourceFile
 	reviews []publicCodeReview
+	author  string
 }
 
 // RoutePOST_GetSubmissions returns all submissions, keyed by username
@@ -217,7 +218,7 @@ func RoutePOST_GetSubmissions(w http.ResponseWriter, r *http.Request) {
 			submission.reviews = append(submission.reviews, publicReviews)
 		}
 		submission.source = privSubmission.Source
-
+		submission.author = user.Name
 		submissionsPublic = append(submissionsPublic, submission)
 	}
 
