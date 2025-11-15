@@ -11,8 +11,13 @@
     returns: {"correct": boolean (true/false)}`
 
 
-/api/join - RoutePOST_CheckinUser:
+/api/join:
     TYPE: POST
+
+    Takes the username as an argument in JSON format:
+    {
+        "Username": "Tripp"
+    }
 
     upon name taken:
     returns {"Error":"name taken"}
@@ -23,4 +28,17 @@
     upon general failure:
     returns {"Error":"err"}
     
+/api/get_users
+    TYPE: GET
+    returns an array of users in JSON format:
+    [
+        {
+            "Name": string
+        }
+    ]
+
+/api/get_submissions:
+    
+
+
 /api/submit
