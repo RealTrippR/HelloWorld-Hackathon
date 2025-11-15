@@ -90,17 +90,19 @@ func RoutePOST_Submit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
+
 	// Decode the JSON body into a map
 	var received map[string]interface{}
 	err := json.NewDecoder(r.Body).Decode(&received)
 	if err != nil {
-		http.Error(w, "Invalid JSON payload", http.StatusBadRequest)
+		http.Error(w, "{\"Error:\":\"Invalid JSON payload\"}", http.StatusBadRequest)
 		return
 	}
 
 	authed, userId := model.IsAuthedRequest(received)
 	if !authed {
-		http.Error(w, "Invalid UserId", http.StatusBadRequest)
+		http.Error(w, "{\"Error:\":\"Invalid JSON payload\"}", http.StatusBadRequest)
 		return
 	}
 
@@ -142,6 +144,60 @@ func RoutePOST_Submit(w http.ResponseWriter, r *http.Request) {
 	model.AddSubmission(userId, srcFileList)
 }
 
+// RoutePOST_GetUsers returns a list of all registered users
+func RoutePOST_GetUsers(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	model.Mutex.Lock()
+	defer model.Mutex.Unlock()
+
+	// Build a response array
+	users := make([]map[string]interface{}, 0, len(model.Users))
+	for _, u := range model.Users {
+		users = append(users, map[string]interface{}{
+			"Name": u.Name,
+		})
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(users)
+}
+
+// RoutePOST_GetSubmissions returns the submissions for a given UserID
+func RoutePOST_GetSubmissions(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Decode request body
+	var received map[string]interface{}
+	if err := json.NewDecoder(r.Body).Decode(&received); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	auth, uId := model.IsAuthedRequest(received)
+	if !auth {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	model.Mutex.Lock()
+	defer model.Mutex.Unlock()
+
+	sourceFiles, ok := model.Submissions[uId]
+	if !ok {
+		sourceFiles = []model.SourceFile{} // return empty slice if none
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(sourceFiles)
+}
+
 func RoutePOST_JoinUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	if r.Method != http.MethodPost {
@@ -178,6 +234,7 @@ func RoutePOST_JoinUser(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{"Error":"err"}`))
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	resp := map[string]interface{}{
 		"Error":  "success",
 		"UserID": id, // uint64, stays a number

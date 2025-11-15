@@ -40,7 +40,7 @@ type TestCase struct {
 }
 
 type User struct {
-	nickname  string
+	Name      string
 	privateId int64
 }
 
