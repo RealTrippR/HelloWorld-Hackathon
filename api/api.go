@@ -346,7 +346,7 @@ func RouteGET_GetState(w http.ResponseWriter, r *http.Request) {
 }
 
 func RoutePOST_AddCodeReview(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
+	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed: Expected GET", http.StatusMethodNotAllowed)
 		return
 	}
@@ -382,6 +382,7 @@ func RoutePOST_AddCodeReview(w http.ResponseWriter, r *http.Request) {
 	var review model.CodeReview
 	review.Msg = reviewContents
 	review.Stars = uint8(stars)
+	review.ReviewerId = userId
 
 	var targetUserId int32
 	var found bool = false
