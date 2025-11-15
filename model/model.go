@@ -108,7 +108,7 @@ func GetCurrentProblem() *Problem {
 
 func IsUsernameTaken(name string) bool {
 	for _, val := range Users {
-		if val.nickname == name {
+		if val.Name == name {
 			return true
 		}
 	}
@@ -154,7 +154,7 @@ func AddSubmission(uId int64, sourceFiles []SourceFile) {
 func AddUser(name string) (error, int64) {
 	var u User
 	var err error
-	u.nickname = name
+	u.Name = name
 	u.privateId, err = generateSecureRandomInt64()
 	if err != nil {
 		return err, 0

@@ -146,7 +146,7 @@ func RoutePOST_Submit(w http.ResponseWriter, r *http.Request) {
 
 // RoutePOST_GetUsers returns a list of all registered users
 func RoutePOST_GetUsers(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
+	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
@@ -155,7 +155,7 @@ func RoutePOST_GetUsers(w http.ResponseWriter, r *http.Request) {
 	defer model.Mutex.Unlock()
 
 	// Build a response array
-	users := make([]map[string]interface{}, 0, len(model.Users))
+	users := make([]interface{}, 0, len(model.Users))
 	for _, u := range model.Users {
 		users = append(users, map[string]interface{}{
 			"Name": u.Name,
@@ -168,7 +168,7 @@ func RoutePOST_GetUsers(w http.ResponseWriter, r *http.Request) {
 
 // RoutePOST_GetSubmissions returns the submissions for a given UserID
 func RoutePOST_GetSubmissions(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
+	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
@@ -224,6 +224,7 @@ func RoutePOST_JoinUser(w http.ResponseWriter, r *http.Request) {
 	defer model.Mutex.Unlock()
 	if model.IsUsernameTaken(username) {
 		w.Write([]byte(`{"Error":"name taken"}`))
+		return
 	}
 
 	var id int64
