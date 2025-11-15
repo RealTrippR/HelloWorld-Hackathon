@@ -1,0 +1,32 @@
+{
+    "Problems": [
+        {
+            "Name": "A*",
+            "Difficulty": "Hard",
+            "Header": "Write an implementation of the A* algorithm",
+            "Objective": "Create an A* algo",
+            "TestCases": [
+                {
+                    "CaseSensitive" : false,
+                    "Input": {
+                        "Streets": [
+                            {
+                                "Name": "Maple Avenue",
+                                "Nodes": [
+                                    [5,5],
+                                    [10,50]
+                                ]
+                            }
+                        ]      
+                    },
+                    "Output": {
+                        "Directions": [
+                            "Turn right onto Maple Avenue",
+                            "Turn left onto Main Street"
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}

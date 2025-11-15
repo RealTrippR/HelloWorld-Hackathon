@@ -1,0 +1,16 @@
+/api/current_problem - RouteGET_CurrentProblem:
+    TYPE: GET
+    Returns the current problem in JSON format
+
+
+/api/check_solution - RoutePOST_CheckSolution:
+    TYPE: POST
+    Parameters:
+    "TestCase": integer // the index of the test case to check against
+    "Output": string // the output to check
+    returns: {"correct": boolean (true/false)}`
+
+
+/api/checkin_user - RoutePOST_CheckinUser:
+    TYPE: POST
+    
