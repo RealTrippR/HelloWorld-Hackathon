@@ -30,7 +30,8 @@ func Init(port uint16) error {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/challenge", api.RouteGET_CurrentChallenge)
 	mux.HandleFunc("/api/check_solution", api.RoutePOST_CheckSolution)
-	mux.HandleFunc("/api/join", api.RoutePOST_joinUser)
+	mux.HandleFunc("/api/submit", api.RoutePOST_Submit)
+	mux.HandleFunc("/api/join", api.RoutePOST_JoinUser)
 
 	server = &http.Server{
 		Addr:    ":" + strconv.Itoa(int(port)),
@@ -39,7 +40,6 @@ func Init(port uint16) error {
 
 	go func() {
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			//fmt.Println("HTTP server error:", err)
 		}
 	}()
 

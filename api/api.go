@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"server/model"
 	"strings"
@@ -43,20 +42,12 @@ func RoutePOST_CheckSolution(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !model.IsAuthedRequest(received) {
-		http.Error(w, "Invalid UserId", http.StatusBadRequest)
-		return
-	}
+	model.Mutex.Lock()
+	defer model.Mutex.Unlock()
 
-	// Extract UserID
-	raw, ok := received["UserID"]
-	if !ok {
-		http.Error(w, "Missing UserID", http.StatusBadRequest)
-		return
-	}
-	uId := int64(raw.(float64))
-	if !model.IsValidUserId(uId) {
-		http.Error(w, "Invalid UserID", http.StatusBadRequest)
+	authed, _ := model.IsAuthedRequest(received)
+	if !authed {
+		http.Error(w, "Invalid UserId", http.StatusBadRequest)
 		return
 	}
 
@@ -72,10 +63,10 @@ func RoutePOST_CheckSolution(w http.ResponseWriter, r *http.Request) {
 	expected := testCase.OutputJSON
 
 	jsonBytesExpected, err := json.Marshal(expected)
-	fmt.Println("EXPECTED: ", string(jsonBytesExpected))
+	//fmt.Println("EXPECTED: ", string(jsonBytesExpected))
 
 	jsonBytesRecevied, err := json.Marshal(received["Output"])
-	fmt.Println("RECEIVED: ", string(jsonBytesRecevied))
+	//fmt.Println("RECEIVED: ", string(jsonBytesRecevied))
 
 	var isCorrect bool
 	if testCase.CaseSensitive {
@@ -93,7 +84,65 @@ func RoutePOST_CheckSolution(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func RoutePOST_joinUser(w http.ResponseWriter, r *http.Request) {
+func RoutePOST_Submit(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed: Expected POST", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Decode the JSON body into a map
+	var received map[string]interface{}
+	err := json.NewDecoder(r.Body).Decode(&received)
+	if err != nil {
+		http.Error(w, "Invalid JSON payload", http.StatusBadRequest)
+		return
+	}
+
+	authed, userId := model.IsAuthedRequest(received)
+	if !authed {
+		http.Error(w, "Invalid UserId", http.StatusBadRequest)
+		return
+	}
+
+	sourceFileMap, ok := received["SourceFiles"].([]interface{})
+	if !ok {
+		http.Error(w, "Missing or invalid field 'SourceFiles'", http.StatusBadRequest)
+		return
+	}
+
+	var srcFileList []model.SourceFile
+	for _, value := range sourceFileMap {
+		var srcFile model.SourceFile
+		// parse source files
+		sourceFileJSON, ok := value.(map[string]interface{})
+		if !ok {
+			http.Error(w, "{\"Error:\":\"Improperly structured list of sourcefiles. Expects an array of objects: [{'Name': string, 'Code': string}]}\"", http.StatusBadRequest)
+			return
+		}
+
+		nameStr, ok := sourceFileJSON["Name"].(string)
+		if !ok || nameStr == "" {
+			http.Error(w, "{\"Error:\":\"Improperly structured list of sourcefiles. Expects an array of objects: [{'Name': string, 'Code': string}]}\"", http.StatusBadRequest)
+			return
+		}
+
+		codeStr, ok := sourceFileJSON["Code"].(string)
+		if !ok || codeStr == "" {
+			http.Error(w, "{\"Error:\":\"Improperly structured list of sourcefiles. Expects an array of objects: [{'Name': string, 'Code': string}]}\"", http.StatusBadRequest)
+			return
+		}
+
+		srcFile.Name = nameStr
+		srcFile.Code = codeStr
+		srcFileList = append(srcFileList, srcFile)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("{\"Error\":\"Success\"}"))
+	model.AddSubmission(userId, srcFileList)
+}
+
+func RoutePOST_JoinUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed: Expected POST", http.StatusMethodNotAllowed)
@@ -115,12 +164,16 @@ func RoutePOST_joinUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	model.Mutex.Lock()
+	defer model.Mutex.Unlock()
 	if model.IsUsernameTaken(username) {
 		w.Write([]byte(`{"Error":"name taken"}`))
 	}
 
 	var id int64
+
 	err, id = model.AddUser(username)
+
 	if err != nil {
 		w.Write([]byte(`{"Error":"err"}`))
 	}

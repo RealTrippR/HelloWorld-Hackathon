@@ -1,9 +1,7 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 	"server/model"
 	"server/server"
 )
@@ -25,8 +23,13 @@ func main() {
 		return
 	}
 
-	fmt.Println("Server open on port", port, ".\nPress any key to quit the server.")
-	reader := bufio.NewReader(os.Stdin)
-	_, _ = reader.ReadString('\n')
+	fmt.Println("Server open on port", port, ".\nPress any ctrl+C to quit the server.")
+
+	for {
+		model.Mutex.Lock()
+		model.Tick()
+		model.Mutex.Unlock()
+	}
+
 	server.Terminate()
 }
