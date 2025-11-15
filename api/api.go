@@ -347,7 +347,7 @@ func RouteGET_GetState(w http.ResponseWriter, r *http.Request) {
 
 func RoutePOST_AddCodeReview(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed: Expected GET", http.StatusMethodNotAllowed)
+		http.Error(w, "Method not allowed: Expected POST", http.StatusMethodNotAllowed)
 		return
 	}
 
