@@ -158,7 +158,12 @@ func json_to_problem(value interface{}, itr uint32) (*Problem, error) {
 	} else if diffStr == "Hard" {
 		diff = Hard
 	} else {
-		//return fmt.Errorf("invalid problem: missing or invalid 'Difficulty': ", diffStr, ". Valid options are: \"Easy\", \"Medium\", \"Hard\""), nil
+		return nil, fmt.Errorf("invalid problem: missing or invalid 'Difficulty': Valid options are: \"Easy\", \"Medium\", \"Hard\"")
+	}
+
+	objective, ok := problemJSON["Objective"].(string)
+	if !ok || diffStr == "" {
+		return nil, fmt.Errorf("invalid problem: missing or invalid 'Objective'")
 	}
 
 	problem := &Problem{
@@ -168,6 +173,7 @@ func json_to_problem(value interface{}, itr uint32) (*Problem, error) {
 		},
 		difficulty: diff,
 		id:         uint16(itr),
+		objective:  objective,
 	}
 
 	return problem, nil
