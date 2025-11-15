@@ -1,0 +1,10 @@
+{
+    "Problems": [
+        {
+            "Name": "A*",
+            "Difficulty": "Medium",
+            "Header": "Write an implementation of the A* algorithm",
+            "Objective": "Create an A* algo"
+        }
+    ]
+}
