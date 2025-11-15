@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"server/model"
+	"strings"
 )
 
 func RouteGET_CurrentChallenge(w http.ResponseWriter, r *http.Request) {
@@ -42,6 +43,23 @@ func RoutePOST_CheckSolution(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !model.IsAuthedRequest(received) {
+		http.Error(w, "Invalid UserId", http.StatusBadRequest)
+		return
+	}
+
+	// Extract UserID
+	raw, ok := received["UserID"]
+	if !ok {
+		http.Error(w, "Missing UserID", http.StatusBadRequest)
+		return
+	}
+	uId := int64(raw.(float64))
+	if !model.IsValidUserId(uId) {
+		http.Error(w, "Invalid UserID", http.StatusBadRequest)
+		return
+	}
+
 	caseIdx := received["TestCase"].(float64)
 
 	problem := model.GetCurrentProblem()
@@ -50,7 +68,8 @@ func RoutePOST_CheckSolution(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 	}
 
-	expected := model.GetCurrentProblem().TestCases[int(caseIdx)].OutputJSON
+	testCase := model.GetCurrentProblem().TestCases[int(caseIdx)]
+	expected := testCase.OutputJSON
 
 	jsonBytesExpected, err := json.Marshal(expected)
 	fmt.Println("EXPECTED: ", string(jsonBytesExpected))
@@ -58,17 +77,24 @@ func RoutePOST_CheckSolution(w http.ResponseWriter, r *http.Request) {
 	jsonBytesRecevied, err := json.Marshal(received["Output"])
 	fmt.Println("RECEIVED: ", string(jsonBytesRecevied))
 
+	var isCorrect bool
+	if testCase.CaseSensitive {
+		isCorrect = string(jsonBytesRecevied) == string(jsonBytesExpected)
+	} else {
+		isCorrect = strings.EqualFold(string(jsonBytesRecevied), string(jsonBytesExpected))
+	}
 	// Check equality
-	if string(jsonBytesRecevied) == string(jsonBytesExpected) {
+	if isCorrect {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"correct": true}`))
+		w.Write([]byte(`{"Correct": true}`))
 	} else {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"correct": false}`))
+		w.Write([]byte(`{"Correct": false}`))
 	}
 }
 
 func RoutePOST_joinUser(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed: Expected POST", http.StatusMethodNotAllowed)
 		return
@@ -83,4 +109,26 @@ func RoutePOST_joinUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	username, ok := received["Username"].(string)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if model.IsUsernameTaken(username) {
+		w.Write([]byte(`{"Error":"name taken"}`))
+	}
+
+	var id int64
+	err, id = model.AddUser(username)
+	if err != nil {
+		w.Write([]byte(`{"Error":"err"}`))
+	}
+
+	resp := map[string]interface{}{
+		"Error":  "success",
+		"UserID": id, // uint64, stays a number
+	}
+
+	json.NewEncoder(w).Encode(resp)
 }

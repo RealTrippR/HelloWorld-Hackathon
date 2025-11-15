@@ -4,12 +4,15 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"server/model"
 	"server/server"
 )
 
 var port uint16 = 3000
 
 func main() {
+	model.Init()
+
 	err := server.InitProblems("problems")
 	if err != nil {
 		fmt.Println("Error parsing JSON problems file.")

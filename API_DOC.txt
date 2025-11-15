@@ -13,5 +13,14 @@
 
 /api/join - RoutePOST_CheckinUser:
     TYPE: POST
+
+    upon name taken:
+    returns {"Error":"name taken"}
+
+    upon success:
+    returns {"Error":"success"}
+
+    upon general failure:
+    returns {"Error":"err"}
     
 /api/submit
