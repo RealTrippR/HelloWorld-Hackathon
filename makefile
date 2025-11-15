@@ -1,5 +1,5 @@
 build/server.exe:
-	go build -o server.exe
+	go build -o build/server.exe
 
 run: build/server.exe
 	./build/server.exe
